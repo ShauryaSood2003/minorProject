@@ -1,12 +1,12 @@
-'use client'
 
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, AlertCircle, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, AlertCircle, AlertTriangle, Eye, EyeOff } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Separator } from "@/components/ui/separator"
 
@@ -20,6 +20,16 @@ export default function SettingsPage() {
   })
   const [error, setError] = useState('')
   const [deactivateConfirm, setDeactivateConfirm] = useState(false)
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  })
+  const [showPassword, setShowPassword] = useState({
+    current: false,
+    new: false,
+    confirm: false
+  })
 
   useEffect(() => {
     if (settings.darkMode) {
@@ -52,6 +62,32 @@ export default function SettingsPage() {
     } else {
       setDeactivateConfirm(true)
     }
+  }
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setPasswordData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setError('New passwords do not match.')
+      return
+    }
+    try {
+      console.log('Updating password...')
+      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Password updated successfully')
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (err) {
+      setError('Failed to update password. Please try again.')
+    }
+  }
+
+  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
+    setShowPassword(prev => ({ ...prev, [field]: !prev[field] }))
   }
 
   return (
@@ -93,6 +129,84 @@ export default function SettingsPage() {
           <CardFooter>
             <Button type="submit" onClick={handleSubmit}>Save Changes</Button>
           </CardFooter>
+        </Card>
+
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle>Update Password</CardTitle>
+            <CardDescription>Change your account password</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleUpdatePassword} className="space-y-4">
+              <div>
+                <Label htmlFor="currentPassword">Current Password</Label>
+                <div className="relative">
+                  <Input
+                    id="currentPassword"
+                    name="currentPassword"
+                    type={showPassword.current ? 'text' : 'password'}
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0"
+                    onClick={() => togglePasswordVisibility('current')}
+                  >
+                    {showPassword.current ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="newPassword">New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="newPassword"
+                    name="newPassword"
+                    type={showPassword.new ? 'text' : 'password'}
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0"
+                    onClick={() => togglePasswordVisibility('new')}
+                  >
+                    {showPassword.new ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showPassword.confirm ? 'text' : 'password'}
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0"
+                    onClick={() => togglePasswordVisibility('confirm')}
+                  >
+                    {showPassword.confirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+              <Button type="submit">Update Password</Button>
+            </form>
+          </CardContent>
         </Card>
 
         <Card className="mt-8">
