@@ -9,6 +9,7 @@ import RegisterPage from "./pages/Register";
 import DashboardPage from "./pages/DashBoard";
 import ProfilePage from "./pages/Profile";
 import SettingsPage from "./pages/Settings";
+import ChatPage from "./pages/Chat";
 
 function App() {
  
@@ -22,6 +23,7 @@ function App() {
         <Route element={<DashboardPage />} path="/dashboard"></Route>
         <Route element={<ProfilePage />} path="/profile"></Route>
         <Route element={<SettingsPage />} path="/settings"></Route>
+        <Route element={<ChatPage />} path="/chat"></Route>
       </Routes>
     </Router>
     </>

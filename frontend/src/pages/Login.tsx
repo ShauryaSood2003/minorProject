@@ -19,7 +19,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Login to Your Account</CardTitle>

@@ -1,18 +1,17 @@
 'use client'
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'  // Import useNavigate from react-router-dom
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, AlertCircle } from 'lucide-react'
+import { ArrowLeft, AlertCircle, AlertTriangle } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Separator } from "@/components/ui/separator"
 
 export default function SettingsPage() {
-  const navigate = useNavigate()  // Use the useNavigate hook
+  const navigate = useNavigate()
   const [settings, setSettings] = useState({
     notifications: true,
     darkMode: false,
@@ -20,28 +19,25 @@ export default function SettingsPage() {
     apiKey: '••••••••••••••••'
   })
   const [error, setError] = useState('')
+  const [deactivateConfirm, setDeactivateConfirm] = useState(false)
+
+  useEffect(() => {
+    if (settings.darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [settings.darkMode])
 
   const handleSwitchChange = (name: string) => {
     setSettings((prev:any) => ({ ...prev, [name]: !prev[name] }))
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setSettings(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleSelectChange = (name: string, value: string) => {
-    setSettings(prev => ({ ...prev, [name]: value }))
-  }
-
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     try {
-      // TODO: Implement actual settings update logic here
       console.log('Updating settings with:', settings)
-      // Simulating an API call
       await new Promise(resolve => setTimeout(resolve, 1000))
       console.log('Settings updated successfully')
     } catch (err) {
@@ -49,10 +45,19 @@ export default function SettingsPage() {
     }
   }
 
+  const handleDeactivate = () => {
+    if (deactivateConfirm) {
+      console.log('Deactivating account...')
+      // Implement account deactivation logic here
+    } else {
+      setDeactivateConfirm(true)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 py-8">
       <div className="max-w-2xl mx-auto">
-        <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}> {/* Replaced router.back() with navigate(-1) */}
+        <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard
         </Button>
@@ -65,20 +70,9 @@ export default function SettingsPage() {
             <form onSubmit={handleSubmit}>
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="notifications" className="flex flex-col space-y-1">
-                    <span>Notifications</span>
-                    <span className="font-normal text-sm text-gray-500">Receive email notifications</span>
-                  </Label>
-                  <Switch
-                    id="notifications"
-                    checked={settings.notifications}
-                    onCheckedChange={() => handleSwitchChange('notifications')}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
                   <Label htmlFor="darkMode" className="flex flex-col space-y-1">
                     <span>Dark Mode</span>
-                    <span className="font-normal text-sm text-gray-500">Use dark theme</span>
+                    <span className="font-normal text-sm text-gray-500 dark:text-gray-400">Use dark theme</span>
                   </Label>
                   <Switch
                     id="darkMode"
@@ -86,34 +80,6 @@ export default function SettingsPage() {
                     onCheckedChange={() => handleSwitchChange('darkMode')}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="language">Language</Label>
-                  <Select
-                    value={settings.language}
-                    onValueChange={(value) => handleSelectChange('language', value)}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select a language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="es">Español</SelectItem>
-                      <SelectItem value="fr">Français</SelectItem>
-                      <SelectItem value="de">Deutsch</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="apiKey">API Key</Label>
-                  <Input
-                    id="apiKey"
-                    name="apiKey"
-                    type="password"
-                    value={settings.apiKey}
-                    onChange={handleInputChange}
-                  />
-                </div>
-
               </div>
               {error && (
                 <Alert variant="destructive" className="mt-4">
@@ -127,6 +93,37 @@ export default function SettingsPage() {
           <CardFooter>
             <Button type="submit" onClick={handleSubmit}>Save Changes</Button>
           </CardFooter>
+        </Card>
+
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="text-red-600 dark:text-red-400">Danger Zone</CardTitle>
+            <CardDescription>Irreversible and destructive actions</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Separator className="my-4" />
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Deactivate Account</h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Deactivating your account will remove all your data and cannot be undone. Please be certain.
+              </p>
+              {deactivateConfirm && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Warning</AlertTitle>
+                  <AlertDescription>
+                    This action cannot be undone. All your data will be permanently removed.
+                  </AlertDescription>
+                </Alert>
+              )}
+              <Button
+                variant="destructive"
+                onClick={handleDeactivate}
+              >
+                {deactivateConfirm ? 'Confirm Deactivation' : 'Deactivate Account'}
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </div>

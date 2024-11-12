@@ -1,4 +1,3 @@
-'use client'
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -6,36 +5,54 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { ChevronDown, LogOut, Settings, User, Calendar, Filter } from 'lucide-react'
+import { ChevronDown, LogOut, Settings, User, Calendar, Globe, PlusIcon } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar as CalendarComponent } from "@/components/ui/calendar"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { format } from "date-fns"
 
-// Mock data for chat history
+// Updated mock data for chat history
 const chatHistory = [
-  { id: 1, question: "What's the capital of France?", answer: "The capital of France is Paris.", timestamp: "2024-06-01T10:30:00Z", model: "GPT-3" },
-  { id: 2, question: "How do I create a React component?", answer: "To create a React component, you can use a function or class that returns JSX...", timestamp: "2024-06-02T14:45:00Z", model: "GPT-4" },
-  { id: 3, question: "What's the difference between let and const in JavaScript?", answer: "The main difference between let and const is that let allows reassignment of the variable, while const does not...", timestamp: "2024-06-03T09:15:00Z", model: "GPT-3" },
-  { id: 4, question: "Explain quantum computing", answer: "Quantum computing is a type of computation that harnesses the collective properties of quantum states, such as superposition, interference, and entanglement, to perform calculations...", timestamp: "2024-06-04T16:20:00Z", model: "GPT-4" },
-  { id: 5, question: "What are the benefits of exercise?", answer: "Regular exercise offers numerous benefits including improved cardiovascular health, stronger muscles and bones, better mental health, weight management, and reduced risk of chronic diseases...", timestamp: "2024-06-05T11:05:00Z", model: "GPT-3" },
+  {
+    id: 1,
+    websiteName: "vercel.com",
+    chats: [
+      { id: 1, question: "What's Vercel's main product?", answer: "Vercel's main product is a cloud platform for static sites and Serverless Functions.", timestamp: "2024-06-01T10:30:00Z"},
+      { id: 2, question: "How does Vercel handle deployments?", answer: "Vercel handles deployments through automatic deployments triggered by git pushes, with preview deployments for pull requests.", timestamp: "2024-06-02T14:45:00Z" }
+    ]
+  },
+  {
+    id: 2,
+    websiteName: "react.dev",
+    chats: [
+      { id: 3, question: "What are React hooks?", answer: "React hooks are functions that let you use state and other React features in functional components.", timestamp: "2024-06-03T09:15:00Z"},
+      { id: 4, question: "Explain the useEffect hook", answer: "The useEffect hook in React is used for side effects in functional components, such as data fetching, subscriptions, or manually changing the DOM.", timestamp: "2024-06-04T16:20:00Z" },
+    ]
+  },
+  {
+    id: 3,
+    websiteName: "github.com",
+    chats: [
+      { id: 5, question: "How do I create a pull request?", answer: "To create a pull request on GitHub, push your changes to a new branch, go to the repository page, click 'Pull requests', then 'New pull request'. Select your branch and base branch, add a title and description, then click 'Create pull request'.", timestamp: "2024-06-05T11:05:00Z" },
+    ]
+  }
 ]
 
-const models = ["All Models", "GPT-3", "GPT-4"]
 
 export default function DashboardPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
-  const [selectedModel, setSelectedModel] = useState("All Models")
   const navigate = useNavigate()
 
-  const filteredChats = chatHistory.filter(chat => 
-    (chat.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    chat.answer.toLowerCase().includes(searchQuery.toLowerCase())) &&
-    (!selectedDate || format(new Date(chat.timestamp), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')) &&
-    (selectedModel === "All Models" || chat.model === selectedModel)
-  )
+  const filteredChatHistory = chatHistory.map(website => ({
+    ...website,
+    chats: website.chats.filter(chat => 
+      (chat.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      chat.answer.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (!selectedDate || format(new Date(chat.timestamp), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd'))
+    )
+  })).filter(website => website.chats.length > 0)
 
   const handleLogout = () => {
     // TODO: Implement actual logout logic here
@@ -44,11 +61,11 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 dark:text-gray-100 dark:bg-gray-900">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white shadow dark:bg-gray-900 dark:text-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center flex-wrap space-y-3 md:space-y-0">
-          <h1 className="text-2xl font-bold text-gray-900">LLM Chrome Extension</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">LLM Chrome Extension</h1>
           <div className="flex items-center space-x-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -81,8 +98,14 @@ export default function DashboardPage() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Card>
           <CardHeader>
+            <div className='flex justify-between'>
             <CardTitle>Your Chat History</CardTitle>
-            <CardDescription>Review and search your past conversations with the LLM.</CardDescription>
+            <Button onClick={()=>{navigate("/chat")}}>
+              <PlusIcon/>
+              Start New Chat
+            </Button>
+            </div>
+            <CardDescription>Review and search your past conversations with the LLM across different websites.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-4 flex flex-wrap gap-4">
@@ -109,41 +132,38 @@ export default function DashboardPage() {
                   />
                 </PopoverContent>
               </Popover>
-              <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select Model" />
-                </SelectTrigger>
-                <SelectContent>
-                  {models.map((model) => (
-                    <SelectItem key={model} value={model}>{model}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {(selectedDate || selectedModel !== "All Models") && (
-                <Button variant="ghost" onClick={() => {
-                  setSelectedDate(undefined)
-                  setSelectedModel("All Models")
-                }}>
-                  <Filter className="mr-2 h-4 w-4" />
-                  Clear Filters
-                </Button>
-              )}
+           
             </div>
-            <ScrollArea className="h-[600px] w-full rounded-md border p-4">
-              {filteredChats.map((chat) => (
-                <Card key={chat.id} className="mb-4">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <CardTitle className="text-sm font-medium">Q: {chat.question}</CardTitle>
-                      <span className="text-xs text-muted-foreground">{chat.model}</span>
-                    </div>
-                    <CardDescription>{new Date(chat.timestamp).toLocaleString()}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm">{chat.answer}</p>
-                  </CardContent>
-                </Card>
-              ))}
+            <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+              <Accordion type="single" collapsible className="w-full">
+                {filteredChatHistory.map((website) => (
+                  <AccordionItem key={website.id} value={`website-${website.id}`}>
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center space-x-2">
+                        <Globe className="h-4 w-4" />
+                        <span>{website.websiteName}</span>
+                        <span className="text-sm text-muted-foreground">({website.chats.length} chats)</span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      {website.chats.map((chat) => (
+                        <Card key={chat.id} className="mb-4">
+                          <CardHeader>
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-sm font-medium">Q: {chat.question}</CardTitle>
+                            
+                            </div>
+                            <CardDescription>{new Date(chat.timestamp).toLocaleString()}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm">{chat.answer}</p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
             </ScrollArea>
           </CardContent>
         </Card>

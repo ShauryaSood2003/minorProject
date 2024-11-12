@@ -54,7 +54,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
+    <div className="min-h-screen bg-gray-100 py-8 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto">
         <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>  {/* Replaced router.back() with navigate(-1) */}
           <ArrowLeft className="mr-2 h-4 w-4" />
