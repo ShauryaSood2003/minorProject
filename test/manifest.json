@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "Chatbot Sidebar Extension",
+  "version": "1.1",
+  "description": "A chatbot extension with login, registration, and a sidebar UI on the right",
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "login.html",
+    "default_title": "Toggle Chatbot Sidebar"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["sidebar.html", "sidebar.css"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

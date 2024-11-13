@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Chatbot Sidebar</title>
+  <link rel="stylesheet" href="sidebar.css">
+</head>
+<body>
+  <div id="sidebar">
+    <div id="header">
+      <span>Chatbot</span>
+      <button id="closeButton">X</button>
+    </div>
+    <button id="minimizeButton"></button> 
+    <div id="chat"></div>
+    <input type="text" id="message" placeholder="Type a message or use the mic..." />
+    <button id="sendButton">Send</button>
+    <label id="pageInfoLabel">
+      <input type="checkbox" id="togglePageInfo"> Include Page Info
+    </label>
+    <button id="logoutButton">Logout</button>
+  </div>
+
+  <div id="openSidebarButton">
+    <button onclick="openSidebar()">Open Chat</button>
+  </div>
+
+  <script src="sidebar.js"></script>
+</body>
+</html>
