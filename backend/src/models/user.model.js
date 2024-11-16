@@ -25,6 +25,10 @@ const userSchema = new Schema({
             ref: "Conversation"
         }
     ],
+    billing : {
+        type:Schema.Types.ObjectId,
+        ref:"Billing"
+    },
     refreshToken: {
         type: String
     }

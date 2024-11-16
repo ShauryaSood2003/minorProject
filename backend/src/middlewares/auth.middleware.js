@@ -5,7 +5,8 @@ import jwt from "jsonwebtoken";
 export const authenticate = async (req, res, next) => {
     try {
 
-        const accessToken = req.headers["authorization"];
+        const authHeader = req.headers['authorization'];
+        const accessToken = authHeader && authHeader.split(' ')[1];
 
         if (!accessToken) {
             return res.status(401).json({ message: "Unauthorized access, access token is required", data: {}, status: 401 });
