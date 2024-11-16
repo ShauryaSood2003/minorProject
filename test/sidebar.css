@@ -5,7 +5,7 @@ body {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
-  background-color: #f4f7fb; /* Light background for better contrast */
+  background-color: transparent; /* Light background for better contrast */
 }
 #sidebar {
     width: 300px;
@@ -27,17 +27,24 @@ body {
   #openSidebarButton {
     display: none; /* Hidden by default */
     position: fixed;
+    border: none;
     right: 20px;
     bottom: 20px;
     background-color: #4a90e2;
     color: white;
-    padding: 12px 20px;
+    padding: 6px 10px;
     border-radius: 25px;
     font-size: 16px;
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.3s ease;
-  }
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 15px rgba(74, 144, 226, 0.6);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+#openSidebarButton:hover {
+    background-color: #357ABD;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1), 0 0 20px rgba(74, 144, 226, 0.8);
+}
+
   
   #openSidebarButton:hover {
     background-color: #357ab7;

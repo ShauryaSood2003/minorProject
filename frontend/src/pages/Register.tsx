@@ -18,10 +18,23 @@ export default function RegisterPage() {
       alert("Passwords don't match")
       return
     }
+
+    fetch('http://localhost:8000/api/v1/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({name, email, password }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+          if (data.data && data.data.accessToken && data.data.refreshToken) {
+            localStorage.setItem('accessToken', data.data.accessToken);
+            localStorage.setItem('refreshToken', data.data.refreshToken);
+          }
+      });
     // TODO: Implement actual registration logic here
     console.log('Registration attempt with:', { name, email, password })
     // For now, we'll just redirect to the login page
-    navigate('/login') // Navigate to login page using react-router-dom
+    navigate('/dashboard') // Navigate to login page using react-router-dom
   }
 
   return (

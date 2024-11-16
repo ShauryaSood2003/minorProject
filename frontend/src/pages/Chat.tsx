@@ -6,7 +6,7 @@ declare global {
     }
   }
 
-  
+  import ReactMarkdown from 'react-markdown';
   import { useState, useRef, useEffect } from 'react'
   import { useNavigate } from 'react-router-dom'
   import { Button } from "@/components/ui/button"
@@ -82,7 +82,7 @@ declare global {
       setTimeout(() => {
         const botResponse: Message = {
           id: messages.length + 2,
-          content: `This is a simulated response to: "${inputMessage}"`,
+          content: `In computer science, a data warehouse is a central repository of integrated data from one or more disparate sources. It's designed for analytical processing, not for transactional processing (like a database used for daily operations). Think of it as a highly organized and structured archive of historical data, specifically optimized for querying and analysis. Here's a breakdown of its key characteristics: * *Subject-oriented:* Data is organized around specific subjects (e.g., customers, products, sales) rather than operational processes. This makes it easier to analyze specific areas of the business. * *Integrated:* Data from various sources (databases, spreadsheets, external files) is consolidated and standardized into a consistent format. This eliminates inconsistencies and allows for more accurate analysis. * *Time-variant:* Data is stored historically, allowing for trend analysis and comparisons over time. This is crucial for understanding business performance and identifying patterns. * *Non-volatile:* Data in a data warehouse is generally read-only. Once data is loaded, it's not typically updated or deleted directly. Changes are handled through new data loads. *Key differences from operational databases:* * *Purpose:* Operational databases are designed for transactional processing (adding, updating, deleting data in real-time). Data warehouses are for analytical processing (analyzing historical data to gain insights). * *Data Structure:* Operational databases are optimized for fast write operations. Data warehouses are optimized for fast read operations on large datasets. * *Data Volume:* Data warehouses typically hold much larger volumes of data than operational databases. * *Data Update Frequency:* Operational databases are updated frequently. Data warehouses are updated periodically (daily, weekly, monthly). *Components of a Data Warehouse:* * *Data Sources:* Various databases, applications, and files from which data is extracted. * *Extraction, Transformation, Loading (ETL):* The process of extracting data, transforming it to a consistent format, and loading it into the warehouse. * *Data Warehouse Database:* The central repository where the integrated data is stored. * *Data Mart:* Smaller, focused subsets of the data warehouse, tailored to specific departments or business units. * *Query and Reporting Tools:* Software used to access and analyze data in the warehouse. Business Intelligence (BI) tools are commonly used. In essence, data warehousing allows businesses to gain valuable insights from their data, enabling better decision-making, improved business strategies, and increased efficiency.`,
           sender: 'bot',
           timestamp: new Date()
         }
@@ -137,7 +137,10 @@ declare global {
                         <p className="text-sm font-medium mb-1">
                           {message.sender === 'user' ? 'You' : 'AI Assistant'}
                         </p>
-                        <p className="text-sm">{message.content}</p>
+                        <ReactMarkdown className="text-sm">
+                          {message.content}
+                        </ReactMarkdown>
+                        {/* <p className="text-sm">{message.content}</p> */}
                         <p className="text-xs text-gray-500 mt-1">
                           {message.timestamp.toLocaleTimeString()}
                         </p>

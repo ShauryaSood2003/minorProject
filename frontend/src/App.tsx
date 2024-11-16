@@ -10,6 +10,7 @@ import DashboardPage from "./pages/DashBoard";
 import ProfilePage from "./pages/Profile";
 import SettingsPage from "./pages/Settings";
 import ChatPage from "./pages/Chat";
+import BillingAccount from "./pages/BillingAccount";
 
 function App() {
  
@@ -24,6 +25,7 @@ function App() {
         <Route element={<ProfilePage />} path="/profile"></Route>
         <Route element={<SettingsPage />} path="/settings"></Route>
         <Route element={<ChatPage />} path="/chat"></Route>
+        <Route element={<BillingAccount/>} path="/billingAccount"></Route>
       </Routes>
     </Router>
     </>

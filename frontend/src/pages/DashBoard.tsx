@@ -94,8 +94,20 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      {/* Main content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Card className='flex justify-between flex-wrap'>
+          <CardHeader>
+            <CardTitle>Free Tokens For You !</CardTitle>
+            <CardDescription>Chat with our Chrome Extention LLM agent. <strong>You Got a signIn Bonus of 500 tokens 🥳</strong></CardDescription>
+          </CardHeader>
+          <CardContent className='flex items-center align-middle'>
+            <Button onClick={()=>{navigate("/billingAccount")}}>Billing Account</Button>
+          </CardContent>
+        </Card>
+      </main>
+
+      {/* Main content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <Card>
           <CardHeader>
             <div className='flex justify-between'>
@@ -134,7 +146,7 @@ export default function DashboardPage() {
               </Popover>
            
             </div>
-            <ScrollArea className="h-[200px] w-full rounded-md border p-4">
+            <ScrollArea className="h-[300px] w-full rounded-md border p-4">
               <Accordion type="single" collapsible className="w-full">
                 {filteredChatHistory.map((website) => (
                   <AccordionItem key={website.id} value={`website-${website.id}`}>

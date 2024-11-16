@@ -42,7 +42,6 @@ async function loadChatHistory() {
   });
   checkLoginStatus();
 }
-
 async function sendMessage() {
   const userMessage = messageInput.value.trim();
   if (userMessage) {
@@ -56,16 +55,31 @@ async function sendMessage() {
     appendMessage("User", fullMessage, "user-message");
     messageInput.value = "";
 
-    setTimeout(() => {
-      const botReply = `Bot: Echo - "${userMessage}"`;
-      appendMessage("Bot", botReply, "bot-message");
-      speak(botReply); // Speak the bot's response
-      saveChatHistory();
-    }, 500);
+    // Send the message to the backend
+    try {
+      const response = await fetch("http://localhost:3000/processMessage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userMessage }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const botReply = data.reply;
+        appendMessage("Bot", botReply, "bot-message");
+        speak(botReply); // Speak the bot's response
+        saveChatHistory();
+      } else {
+        console.error("Backend error:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Network error:", error);
+    }
 
     saveChatHistory();
   }
 }
+
 
 function appendMessage(sender, message, className) {
   const messageElement = document.createElement("div");
