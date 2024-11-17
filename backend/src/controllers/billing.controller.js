@@ -3,6 +3,9 @@ import { User } from "../models/user.model.js";
 import Razorpay from "razorpay";
 import mongoose from "mongoose";
 
+import dotenv from "dotenv";
+dotenv.config();
+
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID, // Your Razorpay API Key
   key_secret: process.env.RAZORPAY_KEY_SECRET, // Your Razorpay API Secret

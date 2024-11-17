@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 export default function RegisterPage() {
   const [name, setName] = useState('')
@@ -18,23 +19,26 @@ export default function RegisterPage() {
       alert("Passwords don't match")
       return
     }
+    // TODO: Implement actual registration logic here
+    console.log('Registration attempt with:', { name, email, password })
 
-    fetch('http://localhost:8000/api/v1/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({name, email, password }),
+    axios.post('http://localhost:8000/api/v1/auth/signup', {
+      name,
+      email,
+      password,
     })
-      .then((response) => response.json())
-      .then((data) => {
+      .then((response) => {
+        const data = response.data ;
           if (data.data && data.data.accessToken && data.data.refreshToken) {
             localStorage.setItem('accessToken', data.data.accessToken);
             localStorage.setItem('refreshToken', data.data.refreshToken);
+            // For now, we'll just redirect to the login page
+            navigate('/dashboard') // Navigate to login page using react-router-dom
           }
+      }).catch((err : any) => {
+        alert(err.response.data.message)
+        console.log("some error occured while registering", err) ;
       });
-    // TODO: Implement actual registration logic here
-    console.log('Registration attempt with:', { name, email, password })
-    // For now, we'll just redirect to the login page
-    navigate('/dashboard') // Navigate to login page using react-router-dom
   }
 
   return (
