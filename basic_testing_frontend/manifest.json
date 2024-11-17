@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "AI Chatbot Assistant",
+  "version": "1.0.0",
+  "description": "This chrome extension adds a layer of convinience to any website, that you can search whatever you want in the website using AI Chatbot without the need to switch tabs",
+  "permissions": [ 
+    "storage",
+    "tabs",
+    "scripting",
+    "activeTab"
+  ],
+  "action": {
+    "default_popup": "index.html"
+  },
+  "host_permissions": [
+    "http://localhost:8000/*"
+  ],
+  "content_scripts": [
+    {
+      "js": ["src/content.jsx"],
+      "matches": ["*://*/*"]
+    }
+  ]
+}
