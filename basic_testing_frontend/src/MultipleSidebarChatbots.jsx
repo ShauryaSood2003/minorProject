@@ -4,10 +4,13 @@ import { ResizableBox } from 'react-resizable';
 import ReactMarkdown from 'react-markdown'
 import 'react-resizable/css/styles.css';
 
+
+
 function MultipleSidebarChatbots() {
   const [chats, setChats] = useState([]);
   const [activeChat, setActiveChat] = useState(null);
   const [responseComing, setResponseComing] = useState({});
+  const [billingInfo, setBillingInfo] = useState(null)
   const [inputMessage, setInputMessage] = useState('');
   const [position, setPosition] = useState({ x: 900, y: 50 });
   const dragging = useRef(false);
@@ -38,21 +41,39 @@ function MultipleSidebarChatbots() {
   useEffect(()=>{
     chrome.storage.local.get(["accessToken", "refreshToken", "id"], (result) => {
       if (result.accessToken && result.refreshToken && result.id) {
-        console.log("Access Token:", result.accessToken);
-        console.log("Refresh Token:", result.refreshToken);
-        console.log("UserID:", result.id);
-    
-        // Now you can use these tokens and user ID in the chatbot
-        // For example, store them in localStorage for use in the chatbot
+
         window.localStorage.setItem('accessToken', result.accessToken);
         window.localStorage.setItem('refreshToken', result.refreshToken);
         window.localStorage.setItem('id', result.id);
+        fetchBillingInfo(result.accessToken, result.id)
       } else {
         console.error("Tokens not found in chrome.storage.local");
       }
     });
     
   },[]);
+
+  const fetchBillingInfo = async (token, userId) => {
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/billing/billingAccount", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      setBillingInfo(data.data)
+    } catch (error) {
+      setError(`Error fetching billing info: ${error.message}`)
+    }
+  }
 
   const handleSendMessage = async () => {
     if (inputMessage.trim() === '' || activeChat === null) return;
@@ -122,7 +143,7 @@ function MultipleSidebarChatbots() {
             : chat
         )
       );
-      console.log("Chats:",chats);
+      fetchBillingInfo(token, userId)
       
     } catch (err) {
       console.error('Error during message send:', err.message);
@@ -204,11 +225,22 @@ function MultipleSidebarChatbots() {
                 </svg>
 
                 Chat Assistant {activeChat}</h2>
+                
               <button className="p-2 text-black" onClick={() => setActiveChat(null)}>
                 <X className="h-5 w-5" />
                 <span className="sr-only">Close</span>
               </button>
             </div>
+            {billingInfo && billingInfo.token<10 && (
+                  <a
+                    href="http://localhost:5173/billingAccount"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ backgroundColor: 'orange',marginTop:"5px",color: 'white',padding: '5px 15px',borderRadius: '20px',fontSize: '14px',textDecoration: 'none',display: 'inline-block',textAlign: 'center',boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',}}
+                  >
+                    {billingInfo.token.toFixed(2)} Tokens Left - Recharge Now
+                  </a>
+                )}
             <div className="flex-1 p-4 overflow-y-auto  bg-white text-white "
             // style={{color: "white"}}
             >

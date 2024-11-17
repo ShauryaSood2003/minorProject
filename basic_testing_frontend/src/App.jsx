@@ -65,6 +65,7 @@ function Login({ onLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -82,10 +83,12 @@ function Login({ onLogin }) {
               {
                 accessToken: data.data.accessToken,
                 refreshToken: data.data.refreshToken,
-                id: data.data._id,
+                id: data.data._id
               },
               () => {
                 console.log("Tokens saved to chrome.storage.local");
+                setSuccessMessage("Logged in successfully!"); // Set success message
+                setTimeout(() => setSuccessMessage(""), 3000);
               }
             );
 
@@ -108,6 +111,9 @@ function Login({ onLogin }) {
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg w-96 h-auto mx-auto mt-10">
       <h2 className="text-2xl font-semibold text-center mb-6">Login</h2>
+       {successMessage && (
+        <div className="mb-4 text-center text-green-500">{successMessage}</div> // Display success message
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="email"
