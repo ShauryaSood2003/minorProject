@@ -1,6 +1,7 @@
 import { Billing } from "../models/billing.model.js";
 import { User } from "../models/user.model.js";
 import Razorpay from "razorpay";
+import mongoose from "mongoose";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID, // Your Razorpay API Key
@@ -15,9 +16,18 @@ export const billingAccount = async (req, res) => {
       if (!userId) {
         return res.status(400).json({ success: false, message: "No userID found!" });
       }
+
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json({ success: false, message: "Invalid userID provided!" });
+      }
   
+     
+      // Ensure userId is a valid ObjectId instance
+      const userObjectId = new mongoose.Types.ObjectId(userId);
+
+
       // Find the billing account associated with the userId
-      const billingAccount = await Billing.findOne({ user: userId }).populate("user");
+      const billingAccount = await Billing.findOne({ user: userObjectId }).populate("user", "name email");
   
       // If no billing account found, return an error
       if (!billingAccount) {
@@ -49,8 +59,10 @@ export const buyTokens = async (req, res) => {
         return res.status(400).json({ success: false, message: "userId and tokens are required!" });
       }
   
-      // Find the billing account for the user
-      let billingAccount = await Billing.findOne({ user: userId });
+      const userObjectId =new  mongoose.Types.ObjectId(userId);
+
+      // Find the billing account associated with the userId
+      const billingAccount = await Billing.findOne({ user: userObjectId }).populate("user", "name email");
   
       // If no billing account exists, create a new one
       if (!billingAccount) {
@@ -62,6 +74,8 @@ export const buyTokens = async (req, res) => {
   
       // Save the billing account
       await billingAccount.save();
+
+      
   
       // Return the updated billing account
       return res.status(200).json({

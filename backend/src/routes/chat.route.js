@@ -4,7 +4,7 @@ import {  getAllConversation, getParticulartConversation,addNewChatsToConversati
 
 const router = Router() ;
 
-router.get("/all", authenticate, getAllConversation)
+router.post("/all", authenticate, getAllConversation)
 router.post("/one", authenticate, getParticulartConversation)
 router.patch("/append", authenticate, addNewChatsToConversation)
 // router.patch("/new", authenticate, addNewConversation)

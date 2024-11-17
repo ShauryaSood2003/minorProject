@@ -1,5 +1,4 @@
-
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CreditCard, Wallet, Star } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
@@ -7,17 +6,189 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import FeatureSlider from '@/components/subComp/SliderCard'
+import { useNavigate } from 'react-router-dom'
 
 export default function BillingAccount() {
-  const [tokens, setTokens] = useState(100)
+  const [tokens, setTokens] = useState(0)
   const [tokensToBuy, setTokensToBuy] = useState(0)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const [userInfo, setUserInfo] = useState({ name: '', email: '', tokens: 0 })
+  const navigate=useNavigate();
 
   const subscriptionPlans = [
     { name: 'Basic', tokens: 1000, price: 45, originalPrice: 50 },
     { name: 'Pro', tokens: 5000, price: 200, originalPrice: 250 },
     { name: 'Enterprise', tokens: 20000, price: 750, originalPrice: 1000 },
   ]
+
+  useEffect(() => {
+    const fetchUserBillingAccount = async () => {
+      const token = localStorage.getItem("accessToken")
+      const userId = localStorage.getItem("id")
+
+      if (!userId || !token) {
+        console.error("User ID or access token is missing!")
+        return
+      }
+
+      try {
+        const response = await fetch("http://localhost:8000/api/v1/billing/billingAccount", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        })
+
+        const data = await response.json()
+        if (data.success) {
+          setUserInfo({
+            name: data.data.user.name,
+            email: data.data.user.email,
+            tokens: data.data.token,
+          })
+          setTokens(data.data.token) // Update the tokens state with fetched data
+        } else {
+          console.error("Error fetching billing account:", data.message)
+        }
+      } catch (err) {
+        console.error("Network error:", err)
+      }
+    }
+
+    fetchUserBillingAccount()
+  }, []);
+
+
+  function loadScript(src: string) {
+    return new Promise((resolve) => {
+        if (document.querySelector(`script[src="${src}"]`)) {
+            resolve(true);
+            return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.onload = () => resolve(true);
+        script.onerror = () => resolve(false);
+        document.body.appendChild(script);
+    });
+  }
+
+  const createOrder = async (amount:number) => {
+    const token = localStorage.getItem("accessToken");
+    const userId = localStorage.getItem("id");
+
+    if (!userId || !token) {
+      console.error("User ID or access token is missing!");
+      return;
+    }
+
+    try {
+        
+      const response = await fetch("http://localhost:8000/api/v1/billing/createOrder", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ amount, currency:"INR" }),
+      });
+
+      const data = await response.json();
+     
+      return data.data;
+
+    } catch (e) {
+        console.log("Failed to get OrderID");
+    }
+  };
+
+  
+  const createRazorpayPayment = async () => {
+    const res = await loadScript(
+        "https://checkout.razorpay.com/v1/checkout.js",
+    );
+
+    if (!res) {
+        alert("Razorpay SDK failed to load. Are you online?");
+        return;
+    }
+
+    let amount=0;
+    let cost=0;
+
+    if (selectedPlan) {
+      const plan = subscriptionPlans.find(p => p.name === selectedPlan)
+      if (plan) {
+        amount=+plan.tokens;
+        cost=plan.price;
+      }
+    } else if (tokensToBuy > 0) {
+      amount=+tokensToBuy;
+      cost=amount*0.05;
+    }
+
+    try {
+        const orderData = await createOrder(cost);
+
+        const options = {
+            key_id:  import.meta.env.RAZORPAY_KEY_ID,
+            amount: orderData.amount,
+            currency: orderData.currency,
+            name: "LLM",
+            description: "Test Transaction",
+            image: "https://i.ibb.co/5Y3m33n/test.png",
+            order_id: orderData.orderID,
+            handler: async function (respons:any) {
+
+              const token = localStorage.getItem("accessToken");
+              const userId = localStorage.getItem("id");
+
+                try {
+
+                  console.log(respons);
+
+                  if (!userId || !token) {
+                    console.error("User ID or access token is missing!");
+                    return;
+                  }
+
+                  const response = await fetch("http://localhost:8000/api/v1/billing/buytoken", {
+                    method: "POST",
+                    headers: {
+                      "Authorization": `Bearer ${token}`,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ userId,tokens:amount }),
+                  });
+            
+                  const data = await response.json();
+                  console.log("Dta:",data);
+                  
+                  navigate(`/payment/success`, { replace: true })
+
+                } catch (error) {
+                  console.log("Error",error);
+                  
+
+                    navigate(`/payment/failed`, { replace: true })
+                }
+            },
+            theme: {
+                color: "#3399cc",
+            },
+        };
+
+        const paymentObject = new (window as any).Razorpay(options);
+        paymentObject.open();
+
+    } catch (errors) {
+        console.error(`Razorpay Payment Failed: ${errors}`);
+    }
+  };
+
+  
 
   const handlePlanSelect = (planName: string) => {
     const plan = subscriptionPlans.find(p => p.name === planName)
@@ -28,21 +199,12 @@ export default function BillingAccount() {
   }
 
   const handleChangeSelection = () => {
-    setSelectedPlan(null);
-    setTokensToBuy(0);
-  };
+    setSelectedPlan(null)
+    setTokensToBuy(0)
+  }
 
   const handlePurchase = () => {
-    if (selectedPlan) {
-      const plan = subscriptionPlans.find(p => p.name === selectedPlan)
-      if (plan) {
-        setTokens(prevTokens => prevTokens + plan.tokens)
-        alert(`Purchased ${plan.name} plan: ${plan.tokens} tokens for ₹${plan.price}`)
-      }
-    } else if (tokensToBuy > 0) {
-      setTokens(prevTokens => prevTokens + tokensToBuy)
-      alert(`Purchased ${tokensToBuy} tokens for ₹${(tokensToBuy * 0.05).toFixed(2)}`)
-    }
+    createRazorpayPayment();
     setSelectedPlan(null)
     setTokensToBuy(0)
   }
@@ -59,11 +221,11 @@ export default function BillingAccount() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" value="user@example.com" readOnly />
+              <Input id="email" value={userInfo.email} readOnly />
             </div>
             <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
-              <Input id="username" value="johndoe" readOnly />
+              <Input id="username" value={userInfo.name} readOnly />
             </div>
             <div className="space-y-2">
               <Label htmlFor="tokens">Available Tokens</Label>

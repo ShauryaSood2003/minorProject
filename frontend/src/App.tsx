@@ -11,6 +11,9 @@ import ProfilePage from "./pages/Profile";
 import SettingsPage from "./pages/Settings";
 import ChatPage from "./pages/Chat";
 import BillingAccount from "./pages/BillingAccount";
+import PaymentSuccess from "./pages/payment/Success";
+import PaymentFailure from "./pages/payment/Failed";
+
 
 function App() {
  
@@ -26,6 +29,8 @@ function App() {
         <Route element={<SettingsPage />} path="/settings"></Route>
         <Route element={<ChatPage />} path="/chat"></Route>
         <Route element={<BillingAccount/>} path="/billingAccount"></Route>
+        <Route element={<PaymentSuccess/>} path="/payment/success"></Route>
+        <Route element={<PaymentFailure/>} path="/payment/failed"></Route>
       </Routes>
     </Router>
     </>

@@ -20,7 +20,7 @@ export default function ProfilePage() {
     email: '',
     bio: '',
   })
-  const [loading, setLoading] = useState(true) // State to show loading
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function ProfilePage() {
           setFormData({
             name: data.data.name,
             email: data.data.email,
-            bio: data.data.bio || '', // Fallback to empty bio if not provided
+            bio: data.data.bio || '',
           });
         } else {
           console.error("Error fetching profile:", data.message);
@@ -59,7 +59,7 @@ export default function ProfilePage() {
         console.error("Network error:", err);
         setError("Network error occurred while fetching profile.");
       } finally {
-        setLoading(false); // Stop loading
+        setLoading(false);
       }
     };
 
@@ -85,11 +85,36 @@ export default function ProfilePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    
+    const { email, ...updatedProfile } = formData; // Prevent updating the email
+
     try {
-      console.log('Updating profile with:', formData);
-      setIsEditing(false);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulating an API call
-      console.log('Profile updated successfully');
+      const token = localStorage.getItem("accessToken");
+      const userId = localStorage.getItem("id");
+
+      if (!userId || !token) {
+        setError("User ID or token missing.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8000/api/v1/auth/editProfile", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, ...updatedProfile }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('Profile updated successfully');
+        setIsEditing(false);
+      } else {
+        console.error("Error updating profile:", data.message);
+        setError(data.message || "Failed to update profile.");
+      }
     } catch (err) {
       setError('Failed to update profile. Please try again.');
     }
@@ -158,8 +183,7 @@ export default function ProfilePage() {
                     name="email"
                     type="email"
                     value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
+                    disabled
                   />
                 </div>
                 <div className="space-y-2">
