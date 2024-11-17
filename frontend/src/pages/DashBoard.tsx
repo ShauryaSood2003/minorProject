@@ -11,6 +11,7 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { format } from "date-fns"
 import ReactMarkdown from 'react-markdown';
+import axios from 'axios'
 
 
 // Updated mock data for chat history
@@ -75,26 +76,30 @@ export default function DashboardPage() {
       const token = localStorage.getItem("accessToken");
       const userId = localStorage.getItem("id");
 
+      if (!userId || !token) {
+        console.error("User ID or access token is missing, either there is some issue or user has to relogin");
+        // Handle re-authentication, e.g., redirect to login
+        navigate('/login'); // Use your login route
+
+        return ;
+      }
+      console.log(userId,token);
       
       try {
         
 
-        if (!userId || !token) {
-          console.error("User ID or access token is missing!");
-          return;
-        }
-        console.log(userId,token);
-        
-
-        const response = await fetch("http://localhost:8000/api/v1/chat/all", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ userId }),
-        });
-        const userConversations=await response.json();
+      
+        const response = await axios.post(
+    'http://localhost:8000/api/v1/chat/all',
+    { userId },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+        const userConversations = response.data ;
 
         console.log("User Info",userConversations.data.conversations);
         
@@ -119,13 +124,13 @@ export default function DashboardPage() {
       }
       catch (err: any) {
         console.log('error msg', err) ;
-        if (err.response && err.response.data.message === 'Unauthorized access, access token is required') {
+        if (err.response && err.response.data.message.includes('Unauthorized access')) {
         console.log("Access token expired or unauthorized. Redirecting to login.");
         // Handle re-authentication, e.g., redirect to login
         navigate('/login'); // Use your login route
       } else {
         console.log("Failed to get the conversations of the user", err);
-      }
+        }
       }
     }
 

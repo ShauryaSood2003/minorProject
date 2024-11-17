@@ -18,6 +18,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import ReactMarkdown from 'react-markdown'
 import { Send, Volume2, Mic, AlertCircle } from 'lucide-react'
+import axios from 'axios'
 
 // Define the Message type
 type Message = {
@@ -47,8 +48,9 @@ export default function ChatPage() {
     const userId = localStorage.getItem("id")
 
     if (!userId || !token) {
-      setError("User ID or access token is missing. Please log in again.")
-      return
+      console.log("User ID or access token is missing. Please log in again.")
+      navigate('/login')
+      return ; 
     }
 
     fetchBillingInfo(token, userId)
@@ -109,24 +111,22 @@ export default function ChatPage() {
         throw new Error("User ID or access token is missing!")
       }
 
-      const response = await fetch("http://localhost:8000/api/v1/chat/append", {
-        method: "PATCH",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await axios.patch("http://localhost:8000/api/v1/chat/append", 
+        {
           websiteName: "self@general@123",
           question: inputMessage,
           model: "Gemini 1.5",
-        }),
-      })
+        }, {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          }
+        }
+      )
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
 
-      const data = await response.json()
+
+      const data = response.data ;
       const botReply = data.data.conversation.chats[0].answer
 
       const botResponse: Message = {
@@ -138,7 +138,8 @@ export default function ChatPage() {
       setMessages(prevMessages => [...prevMessages, botResponse])
       fetchBillingInfo(token, userId)
     } catch (err: any) {
-      if (err.message === 'Unauthorized access, access token is required') {
+      console.log("error while sending message", err) ;
+      if (err.response.data.message.includes("Unauthorized access")) {
         setError("Your session has expired. Please log in again.")
         navigate('/login')  // Changed to navigate from react-router-dom
       } else {
@@ -159,10 +160,18 @@ export default function ChatPage() {
       })
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status in chat page: ${response.status}`)
       }
 
-      const data = await response.json()
+      const data = await response.json() ;
+
+      if (data.status > 300) {
+        if (data.message.includes("Unauthorized access")) {
+          setError("Your session has expired. Please log in again.")
+          navigate('/login')  // Changed to navigate from react-router-dom
+        }
+      }
+
       setBillingInfo(data.data)
     } catch (error: any) {
       setError(`Error fetching billing info: ${error.message}`)

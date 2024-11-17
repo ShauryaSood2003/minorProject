@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,26 +13,34 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // Save the token in localStorage
-    fetch('http://localhost:8000/api/v1/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-          if (data.data && data.data.accessToken && data.data.refreshToken) {
-            localStorage.setItem('accessToken', data.data.accessToken);
-            localStorage.setItem('refreshToken', data.data.refreshToken);
-            localStorage.setItem('id', data.data._id);
-          }
-      });
-
+    
     // TODO: Implement actual login logic here
     console.log('Login attempt with:', { email, password })
-    // For now, we'll just redirect to a hypothetical dashboard
-    history('/dashboard') // Navigate to dashboard using react-router-dom
+
+
+    axios.post('http://localhost:8000/api/v1/auth/login', {
+      email,
+      password,
+    })
+      .then((response) => {
+        // console.log(0) ;
+        // console.log(response) ;
+        if (response.data.data && response.data.data.accessToken && response.data.data.refreshToken) {
+          // Save the token in localStorage
+          localStorage.setItem('accessToken', response.data.data.accessToken);
+            localStorage.setItem('refreshToken', response.data.data.refreshToken);
+            localStorage.setItem('id', response.data.data._id);
+            // For now, we'll just redirect to a hypothetical dashboard
+            
+            history('/dashboard') // Navigate to dashboard using react-router-dom
+          }
+      }).catch((err) => {
+      
+        console.log("error while logging in", err) ;
+        alert(err.response.data.message)
+        
+      }) ;
+      
   }
 
   return (

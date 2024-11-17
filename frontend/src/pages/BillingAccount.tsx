@@ -41,7 +41,19 @@ export default function BillingAccount() {
           body: JSON.stringify({ userId }),
         })
 
-        const data = await response.json()
+        if (!response.ok) {
+        throw new Error(`HTTP error! in billing account while fetching the user billing account status: ${response.status}`)
+          }
+
+          const data = await response.json() ;
+
+        if (data.status > 300) {
+          if (data.message.includes("Unauthorized access")) {
+            console.log("Your session has expired. Please log in again.")
+            navigate('/login')  // Changed to navigate from react-router-dom
+          }
+        }
+        
         if (data.success) {
           setUserInfo({
             name: data.data.user.name,
@@ -95,7 +107,18 @@ export default function BillingAccount() {
         body: JSON.stringify({ amount, currency:"INR" }),
       });
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(`HTTP error! in billing account while creating order status: ${response.status}`)
+          }
+
+          const data = await response.json() ;
+
+        if (data.status > 300) {
+          if (data.message.includes("Unauthorized access")) {
+            console.log("Your session has expired. Please log in again.")
+            navigate('/login')  // Changed to navigate from react-router-dom
+          }
+        }
      
       return data.data;
 
@@ -163,7 +186,18 @@ export default function BillingAccount() {
                     body: JSON.stringify({ userId,tokens:amount }),
                   });
             
-                  const data = await response.json();
+                  if (!response.ok) {
+        throw new Error(`HTTP error! in billing account in creating the payment status: ${response.status}`)
+          }
+
+          const data = await response.json() ;
+
+        if (data.status > 300) {
+          if (data.message.includes("Unauthorized access")) {
+            console.log("Your session has expired. Please log in again.")
+            navigate('/login')  // Changed to navigate from react-router-dom
+          }
+        }
                   console.log("Dta:",data);
                   
                   navigate(`/payment/success`, { replace: true })
