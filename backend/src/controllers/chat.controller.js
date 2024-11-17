@@ -1,5 +1,6 @@
 import { Conversation } from "../models/conversation.model.js";
 import { User } from "../models/user.model.js";
+import { Billing } from "../models/billing.model.js";
 import { aiModel } from "../utils/aiModel.js";
 
 export const getAllConversation = async (req, res) => {
@@ -121,6 +122,23 @@ export const addNewChatsToConversation = async (req, res) => {
 
         // Find the user's conversation with the specified websiteName
         const existingUser = req.user;
+
+        const userBilling = await Billing.findOne({ user: existingUser._id });
+
+        if (!userBilling) {
+            return res.status(400).json({ data: {}, status: 400, message: "Billing information not found for this user." });
+        }
+
+        // Check if the user has at least 5 tokens
+        if (userBilling.token < 5) {
+            return res.status(400).json({ data: {}, status: 400, message: "Not enough tokens. You need at least 5 tokens to perform this action." });
+        }
+
+        // Deduct 5 tokens from the user's billing
+        userBilling.token -= 5;
+        await userBilling.save();
+        
+        
 
         // Find the conversation by websiteName among the user's conversations
         let conversation = existingUser.conversations.find(conv => conv.websiteName === websiteName);
