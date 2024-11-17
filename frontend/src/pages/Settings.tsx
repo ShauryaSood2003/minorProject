@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
@@ -40,7 +39,7 @@ export default function SettingsPage() {
   }, [settings.darkMode])
 
   const handleSwitchChange = (name: string) => {
-    setSettings((prev:any) => ({ ...prev, [name]: !prev[name] }))
+    setSettings((prev: any) => ({ ...prev, [name]: !prev[name] }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -55,10 +54,38 @@ export default function SettingsPage() {
     }
   }
 
-  const handleDeactivate = () => {
+  const handleDeactivate = async () => {
     if (deactivateConfirm) {
-      console.log('Deactivating account...')
-      // Implement account deactivation logic here
+      try {
+        const token = localStorage.getItem("accessToken")
+        const userId = localStorage.getItem("id");
+
+        if (!userId || !token) {
+          setError("User ID or token missing.");
+          return;
+        }
+
+        const response = await fetch("http://localhost:8000/api/v1/auth/deactivateAccount", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body:JSON.stringify({userId})
+        })
+        
+        if (response.ok) {
+          console.log('Account deactivated successfully')
+          // Optionally navigate to a login screen or home page
+          navigate("/login")
+        } else {
+          const data = await response.json()
+          setError(data.message || 'Failed to deactivate account')
+        }
+      } catch (err) {
+        setError('Failed to deactivate account. Please try again.')
+        console.error('Error deactivating account:', err)
+      }
     } else {
       setDeactivateConfirm(true)
     }
@@ -77,12 +104,37 @@ export default function SettingsPage() {
       return
     }
     try {
-      console.log('Updating password...')
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Password updated successfully')
-      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      const token = localStorage.getItem("accessToken")
+      const userId = localStorage.getItem("id");
+
+      if (!userId || !token) {
+        setError("User ID or token missing.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8000/api/v1/auth/changePassword", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+          userId
+        })
+      })
+
+      if (response.ok) {
+        console.log('Password updated successfully')
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      } else {
+        const data = await response.json()
+        setError(data.message || 'Failed to update password')
+      }
     } catch (err) {
       setError('Failed to update password. Please try again.')
+      console.error('Error updating password:', err)
     }
   }
 

@@ -12,6 +12,22 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Save the token in localStorage
+    fetch('http://localhost:8000/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+          if (data.data && data.data.accessToken && data.data.refreshToken) {
+            localStorage.setItem('accessToken', data.data.accessToken);
+            localStorage.setItem('refreshToken', data.data.refreshToken);
+            localStorage.setItem('id', data.data._id);
+          }
+      });
+
     // TODO: Implement actual login logic here
     console.log('Login attempt with:', { email, password })
     // For now, we'll just redirect to a hypothetical dashboard

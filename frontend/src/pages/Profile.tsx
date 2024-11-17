@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'  // Import useNavigate from react-router-dom
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -12,51 +12,126 @@ import { AlertCircle, ArrowLeft, Camera } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function ProfilePage() {
-  const navigate = useNavigate()  // Use the useNavigate hook
+  const navigate = useNavigate()
   const [isEditing, setIsEditing] = useState(false)
   const [profileImage, setProfileImage] = useState('/placeholder.svg')
   const [formData, setFormData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    bio: 'I love using AI to enhance my browsing experience!',
+    name: '',
+    email: '',
+    bio: '',
   })
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem("accessToken");
+      const userId = localStorage.getItem("id");
+
+      if (!userId || !token) {
+        console.error("User ID or access token is missing!");
+        return;
+      }
+
+      try {
+        const response = await fetch("http://localhost:8000/api/v1/billing/userProfile", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setFormData({
+            name: data.data.name,
+            email: data.data.email,
+            bio: data.data.bio || '',
+          });
+        } else {
+          console.error("Error fetching profile:", data.message);
+          setError(data.message || "Failed to fetch profile.");
+        }
+      } catch (err) {
+        console.error("Network error:", err);
+        setError("Network error occurred while fetching profile.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onloadend = () => {
-        setProfileImage(reader.result as string)
-      }
-      reader.readAsDataURL(file)
+        setProfileImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError('');
+    
+    const { email, ...updatedProfile } = formData; // Prevent updating the email
+
     try {
-      // TODO: Implement actual profile update logic here
-      console.log('Updating profile with:', formData)
-      setIsEditing(false)
-      // Simulating an API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      console.log('Profile updated successfully')
+      const token = localStorage.getItem("accessToken");
+      const userId = localStorage.getItem("id");
+
+      if (!userId || !token) {
+        setError("User ID or token missing.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8000/api/v1/auth/editProfile", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, ...updatedProfile }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('Profile updated successfully');
+        setIsEditing(false);
+      } else {
+        console.error("Error updating profile:", data.message);
+        setError(data.message || "Failed to update profile.");
+      }
     } catch (err) {
-      setError('Failed to update profile. Please try again.')
+      setError('Failed to update profile. Please try again.');
     }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading profile...</p>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 dark:bg-gray-900">
       <div className="max-w-2xl mx-auto">
-        <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>  {/* Replaced router.back() with navigate(-1) */}
+        <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard
         </Button>
@@ -71,7 +146,7 @@ export default function ProfilePage() {
                 <div className="flex flex-col items-center space-y-4">
                   <Avatar className="w-32 h-32">
                     <AvatarImage src={profileImage} alt="Profile picture" />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarFallback>{formData.name.charAt(0).toUpperCase()}</AvatarFallback>
                   </Avatar>
                   {isEditing && (
                     <div>
@@ -108,8 +183,7 @@ export default function ProfilePage() {
                     name="email"
                     type="email"
                     value={formData.email}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
+                    disabled
                   />
                 </div>
                 <div className="space-y-2">
@@ -146,5 +220,5 @@ export default function ProfilePage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
