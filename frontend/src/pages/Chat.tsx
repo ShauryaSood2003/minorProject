@@ -119,6 +119,7 @@ export default function ChatPage() {
           websiteName: "self@general@123",
           question: inputMessage,
           model: "Gemini 1.5",
+          extraInfo:"generate small and crisp response for this question!"
         }),
       })
 

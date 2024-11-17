@@ -102,14 +102,14 @@ export const addNewConversation = async (req, res) => {
 
 export const addNewChatsToConversation = async (req, res) => {
     try {
-        const { websiteName, question, model } = req.body; // question, answer, timestamp, model   
+        const { websiteName, question, model,extraInfo } = req.body; // question, answer, timestamp, model   
 
       
         if (!websiteName || !question ) {
             return res.status(400).json({ data: {}, status: 400, message: "Website name, question are required; only model is optional." });
         }
 
-        // let answer = await aiModel.generateContent(question)  ;
+        // let answer = await aiModel.generateContent(question+extraInfo)  ;
         // console.log("answer", JSON.stringify(answer)) ;
         // console.log("answer type", typeof answer) ;
         // answer = answer.response.candidates[0].content.parts[0].text
@@ -188,7 +188,7 @@ export const addNewChatsToConversation = async (req, res) => {
         }
         
         const ansObj = updatedConversation
-        ansObj.chats = ansObj.chats.filter(chat => chat.timestamp.getTime() === timestamp.getTime())
+        ansObj.chats = ansObj?.chats?.filter(chat => chat.timestamp.getTime() === timestamp.getTime())
 
 
 
