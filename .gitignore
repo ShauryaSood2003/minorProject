@@ -1,3 +1,12 @@
 /backend/.env
 node_modules
 /frontend/.env
+
+**/*.env
+**/*.env.*
+
+.gitignore
+
+**/node_modules/
+
+**/.gitignore

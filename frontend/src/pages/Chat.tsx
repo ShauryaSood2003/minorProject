@@ -124,9 +124,9 @@ export default function ChatPage() {
         }
       )
 
-
-
+      
       const data = response.data ;
+      console.log("response", response.data)
       const botReply = data.data.conversation.chats[0].answer
 
       const botResponse: Message = {
@@ -149,6 +149,9 @@ export default function ChatPage() {
   }
 
   const fetchBillingInfo = async (token: string, userId: string) => {
+
+    // console.log("details", token, userId) ;
+
     try {
       const response = await fetch("http://localhost:8000/api/v1/billing/billingAccount", {
         method: "POST",

@@ -33,7 +33,7 @@ export default function RegisterPage() {
             localStorage.setItem('accessToken', data.data.accessToken);
             localStorage.setItem('refreshToken', data.data.refreshToken);
             // For now, we'll just redirect to the login page
-            navigate('/dashboard') // Navigate to login page using react-router-dom
+            navigate('/login') // Navigate to login page using react-router-dom
           }
       }).catch((err : any) => {
         alert(err.response.data.message)

@@ -15,6 +15,12 @@ function MultipleSidebarChatbots() {
   const [position, setPosition] = useState({ x: 900, y: 50 });
   const dragging = useRef(false);
   const dragOffset = useRef({ x: 0, y: 0 });
+  const [isListening, setIsListening] = useState(false)
+  const recognitionRef = useRef(null) ;
+
+  const [speechSynthesisInstance, setSpeechSynthesisInstance] = useState(null);
+  const [currentMessageId, setCurrentMessageId] = useState(null);
+
 
   const createNewChat = () => {
     const newChat = {
@@ -35,11 +41,16 @@ function MultipleSidebarChatbots() {
   };
 
   useEffect(() => {
+    console.log('chats', chats);
+  }, [chats]);
+
+  useEffect(() => {
     console.log('responseComing', JSON.stringify(responseComing));
   }, [responseComing]);
 
   useEffect(()=>{
     chrome.storage.local.get(["accessToken", "refreshToken", "id"], (result) => {
+      // TODO: sahil, handle the condition where tokens are not found
       if (result.accessToken && result.refreshToken && result.id) {
 
         window.localStorage.setItem('accessToken', result.accessToken);
@@ -50,8 +61,35 @@ function MultipleSidebarChatbots() {
         console.error("Tokens not found in chrome.storage.local");
       }
     });
+
+    initializeSpeechRecognition()
+
     
   },[]);
+
+  const initializeSpeechRecognition = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition()
+      recognitionRef.current.continuous = false
+      recognitionRef.current.interimResults = false
+      recognitionRef.current.lang = 'en-US'
+
+      recognitionRef.current.onresult = (event ) => {
+        const transcript = event.results[0][0].transcript
+        setInputMessage(prevMsg => prevMsg + ' ' + transcript)
+        setIsListening(false)
+      }
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error:', event.error)
+        setIsListening(false)
+        console.error('Speech recognition failed. Please try again.')
+      }
+
+      recognitionRef.current.onend = () => setIsListening(false)
+    }
+  }
 
   const fetchBillingInfo = async (token, userId) => {
     try {
@@ -71,8 +109,10 @@ function MultipleSidebarChatbots() {
       const data = await response.json()
       setBillingInfo(data.data)
     } catch (error) {
-      setError(`Error fetching billing info: ${error.message}`)
+      console.error(`Error fetching billing info: ${error.message}`)
     }
+
+    
   }
 
   const handleSendMessage = async () => {
@@ -178,6 +218,55 @@ function MultipleSidebarChatbots() {
     document.removeEventListener('mouseup', handleMouseUp);
   };
 
+  const startListening = () => {
+    if (recognitionRef.current) {
+      setIsListening(true)
+      recognitionRef.current.start()
+    } else {
+      console.log('Speech recognition is not supported in this browser.')
+    }
+  }
+
+   const handlePlayMessage = (id, text) => {
+
+    console.log("id", id) ;
+    console.log("text", text) ; 
+    console.log("currentMessageId", currentMessageId) ;
+    console.log("speechSynthesisInstance", speechSynthesisInstance) ;
+
+    // If the current message is playing, toggle pause/resume
+    if (speechSynthesisInstance && currentMessageId === id) {
+      console.log(0) ;
+      if (window.speechSynthesis.speaking) {
+        console.log(1) ;
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+          console.log(2) ;
+        } else {
+          console.log(3) ;
+          window.speechSynthesis.pause();
+        }
+      }
+    } else {
+      // Stop any ongoing speech
+      window.speechSynthesis.cancel();
+
+      // Create a new utterance for the selected message
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => {
+        setSpeechSynthesisInstance(null);
+        setCurrentMessageId(null);
+      };
+
+      // Start speaking
+      window.speechSynthesis.speak(utterance);
+
+      // Update the state
+      setSpeechSynthesisInstance(utterance);
+      setCurrentMessageId(id);
+    }
+  };
+
   return (
     <>
       <div className="fixed bottom-4 right-4 flex flex-col items-end space-y-2" >
@@ -220,7 +309,7 @@ function MultipleSidebarChatbots() {
 
             >
               <h2 className="text-lg font-semibold text-black flex items-center gap-3">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" width={24} height={24}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width={20} height={20}>
                   <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 0 1 .865-.501 48.172 48.172 0 0 0 3.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z" />
                 </svg>
 
@@ -244,6 +333,8 @@ function MultipleSidebarChatbots() {
             <div className="flex-1 p-4 overflow-y-auto  bg-white text-white "
             // style={{color: "white"}}
             >
+
+                
               {chats[activeChat - 1].messages.map((message) => (
                 <div
                   key={message.id}
@@ -251,18 +342,21 @@ function MultipleSidebarChatbots() {
                       ? 'ml-auto bg-gray-100 text-black'
                       : 'bg-white text-black'
                     }`}
+
                 // style={{ color: "black",  scrollbarColor: "white" }}
                 >
                   <ReactMarkdown>{message.text}</ReactMarkdown>
 
-                  <button  className="p-2  text-black h-4 my-auto"
+                  <button 
+                  onClick={() => handlePlayMessage(activeChat + ' ' +message.id, message.text)}
+                  className="py-2 pr-2  text-black h-8 my-auto" 
                   >
-                    <Volume2 className="h-4 w-4 block  " />
+                    <Volume2 className={`h-4 w-4  block ${(currentMessageId === activeChat + ' ' +message.id) ? 'text-red-500' : 'text-gray-600'}`}
+                    
+                      />
                   </button>
 
                 </div>
-
-                
               ))}
             </div>
             <div className="border-t p-4 bg-white">
@@ -281,10 +375,7 @@ function MultipleSidebarChatbots() {
                   className="flex-1 p-2 border rounded bg-white text-black "
                 // style={{ color: "black" }}
                 />
-                <button t className="p-2  text-black"
-                >
-                  <Mic className="h-4 w-4" />
-                </button>
+                
 
 
                 <button type="submit" className="p-2  text-black"
@@ -293,6 +384,11 @@ function MultipleSidebarChatbots() {
                 >
                   <Send className="h-4 w-4" />
                   <span className="sr-only">Send message</span>
+                </button>
+
+                <button  className="p-2  text-black" onClick={startListening} disabled={isListening}
+                >
+                  <Mic className={`h-4 w-4 ${isListening ? 'text-red-500' : 'text-black'}`} />
                 </button>
               </form>
             </div>

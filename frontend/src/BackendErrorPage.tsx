@@ -13,7 +13,7 @@ const BackendErrorPage = ({ pingBackend }: { pingBackend: () => void }) => {
           Unable to Connect
         </h1>
         <p className="text-gray-600 mb-6">
-          We’re having trouble communicating with the server. Please check your
+          We are having trouble communicating with the server. Please check your
           connection or try again later.
         </p>
         <button

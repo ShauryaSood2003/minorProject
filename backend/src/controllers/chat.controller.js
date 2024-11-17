@@ -166,8 +166,10 @@ export const addNewChatsToConversation = async (req, res) => {
                 return res.status(400).json({ data: {}, status: 400, message: "Error adding new conversation" })
             }
 
-            const ansObj = updatedUserWithNewConversation
-            ansObj.chats = ansObj.chats.filter(chat => chat.timestamp.getTime() === timestamp.getTime())
+            const ansObj = addNewConversation ;
+            console.log("new conversation created", JSON.stringify(ansObj)) ;
+
+            ansObj.chats = ansObj.chats?.filter(chat => chat.timestamp.getTime() === timestamp.getTime())
 
           
 
@@ -188,8 +190,10 @@ export const addNewChatsToConversation = async (req, res) => {
         }
         
         const ansObj = updatedConversation
+        console.log(JSON.stringify(ansObj)) ;
+        
         ansObj.chats = ansObj.chats.filter(chat => chat.timestamp.getTime() === timestamp.getTime())
-
+        
 
 
         res.status(200).json({ data: { conversation: ansObj }, message: "Conversation updated successfully", status: 200 });

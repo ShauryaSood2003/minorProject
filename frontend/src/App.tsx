@@ -1,5 +1,4 @@
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -27,7 +26,7 @@ function App() {
   //   const pingBackend = () => {
   //   // Simulate retry logic here
   //   axios
-  //     .get("http://localhost:8000/api/v1/ping")
+  //     .get("http://localhost:8000/ping")
   //     .then((response) => {
   //       if (response.status === 200) {
   //         setError(false);
@@ -51,12 +50,15 @@ function App() {
   //   if (error) {
   //     navigate("/loading/failed"); // Navigate to the error page when error is true
   //   }
-  // }, [error, navigate]); // Dependency array ensures it triggers when `error` changes
+  //   else {
+  //     navigate("/login");
+  //   }
+
+  // }, [error]); // Dependency array ensures it triggers when `error` changes
 
  
   return (
     <>
-     <Router>
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route element={<LoginPage />} path="/login"></Route>
@@ -70,7 +72,6 @@ function App() {
         <Route element={<PaymentFailure/>} path="/payment/failed"></Route>
         {/* <Route element={<BackendErrorPage pingBackend={pingBackend} />} path="/loading/failed"></Route> */}
       </Routes>
-    </Router>
     </>
   )
 }
