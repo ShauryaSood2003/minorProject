@@ -1,0 +1,141 @@
+import React, { useState } from 'react';
+import { MessageCircle, Send, X, Plus } from 'lucide-react';
+import { z } from 'zod';
+
+// type Message = {
+//   id: number;
+//   text: string;
+//   sender: 'user' | 'bot';
+// };
+
+// type Chat = {
+//   id: number;
+//   messages: Message[];
+// };
+
+function MultipleSidebarChatbots() {
+  // const [chats, setChats] = useState<Chat[]>([]);
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
+  const [inputMessage, setInputMessage] = useState('');
+
+  const createNewChat = () => {
+    const newChat = {
+      id: chats.length + 1,
+      messages: [{ id: 1, text: "Hello! How can I assist you today?", sender: 'bot' }]
+    };
+    setChats([...chats, newChat]);
+    setActiveChat(newChat.id);
+  };
+
+  const handleSendMessage = () => {
+    if (inputMessage.trim() === '' || activeChat === null) return;
+
+    const newMessage = {
+      id: chats[activeChat - 1].messages.length + 1,
+      text: inputMessage,
+      sender: 'user'
+    };
+
+    const updatedChats = chats.map(chat => 
+      chat.id === activeChat 
+        ? { ...chat, messages: [...chat.messages, newMessage] }
+        : chat
+    );
+
+    setChats(updatedChats);
+    setInputMessage('');
+
+    // Simulate bot response
+    setTimeout(() => {
+      const botResponse = {
+        id: updatedChats[activeChat - 1].messages.length + 1,
+        text: "Thank you for your message. I'm an AI assistant. How may I help you further?",
+        sender: 'bot'
+      };
+      setChats(prevChats => prevChats.map(chat => 
+        chat.id === activeChat 
+          ? { ...chat, messages: [...chat.messages, botResponse] }
+          : chat
+      ));
+    }, 1000);
+  };
+
+  return (
+    <>
+      <div className="fixed bottom-4 right-4 flex flex-col items-end space-y-2"  >
+        {chats.map((chat) => (
+          <button
+            key={chat.id}
+            className=" p-4 shadow-lg flex gap-1     rounded-xl items-center "
+            onClick={() => setActiveChat(chat.id)}
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span className="">Chat {chat.id}</span>
+          </button>
+        ))}
+        <button
+          className="rounded-full p-4 shadow-lg"
+          onClick={createNewChat}
+        >
+          <Plus className="h-6 w-6" />
+          <span className="sr-only">Create new chat</span>
+        </button>
+      </div>
+
+      {activeChat !== null && (
+        <div className="fixed right-0 top-0 h-full w-80 bg-background shadow-lg transition-transform duration-300 ease-in-out translate-x-0" style = {{backgroundColor: "white", zIndex: "100"}} >
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between border-b px-4 py-2">
+              <h2 className="text-lg font-semibold text-black">Chat Assistant {activeChat}</h2>
+              <button className="p-2 text-black" onClick={() => setActiveChat(null)}>
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close</span>
+              </button>
+            </div>
+
+            <div className="flex-1 p-4 overflow-y-auto bg-white text-black" style = {{backgroundColor: "white", zIndex: "100"}} >
+              {chats[activeChat - 1].messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`mb-4 max-w-[80%] rounded-lg p-2 ${
+                    message.sender === 'user'
+                      ? 'ml-auto bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
+                >
+                  {message.text}
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t p-4 bg-white  " style = {{backgroundColor: "white", zIndex: "100"}}>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  className="flex-1 p-2 border rounded bg-white"
+                />
+                <button type="submit" className="p-2 text-black">
+                  <Send className="h-4 w-4" />
+                  <span className="sr-only">Send message</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default MultipleSidebarChatbots;
+

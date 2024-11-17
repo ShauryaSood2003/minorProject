@@ -1,0 +1,174 @@
+import React, { useState, useRef } from 'react';
+import { MessageCircle, Send, X, Plus } from 'lucide-react';
+import { ResizableBox } from 'react-resizable';
+import 'react-resizable/css/styles.css';
+
+function MultipleSidebarChatbots() {
+  const [chats, setChats] = useState([]);
+  const [activeChat, setActiveChat] = useState(null);
+  const [inputMessage, setInputMessage] = useState('');
+  const [position, setPosition] = useState({ x: 300, y: 100 });
+  const dragging = useRef(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+
+  const createNewChat = () => {
+    const newChat = {
+      id: chats.length + 1,
+      messages: [
+        {
+          id: 1,
+          text: 'Hello! How can I assist you today?',
+          sender: 'bot',
+        },
+      ],
+    };
+    setChats([...chats, newChat]);
+    setActiveChat(newChat.id);
+  };
+
+  const handleSendMessage = () => {
+    if (inputMessage.trim() === '' || activeChat === null) return;
+
+    const newMessage = {
+      id: chats[activeChat - 1].messages.length + 1,
+      text: inputMessage,
+      sender: 'user',
+    };
+
+    const updatedChats = chats.map((chat) =>
+      chat.id === activeChat
+        ? { ...chat, messages: [...chat.messages, newMessage] }
+        : chat
+    );
+
+    setChats(updatedChats);
+    setInputMessage('');
+
+    // Simulate bot response
+    setTimeout(() => {
+      const botResponse = {
+        id: updatedChats[activeChat - 1].messages.length + 1,
+        text: "Thank you for your message. I'm an AI assistant. How may I help you further?",
+        sender: 'bot',
+      };
+      setChats((prevChats) =>
+        prevChats.map((chat) =>
+          chat.id === activeChat
+            ? { ...chat, messages: [...chat.messages, botResponse] }
+            : chat
+        )
+      );
+    }, 1000);
+  };
+
+  const handleMouseDown = (e) => {
+    dragging.current = true;
+    dragOffset.current = {
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleMouseMove = (e) => {
+    if (dragging.current) {
+      setPosition({
+        x: e.clientX - dragOffset.current.x,
+        y: e.clientY - dragOffset.current.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    dragging.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
+  return (
+    <>
+      <div className="fixed bottom-4 right-4 flex flex-col items-end space-y-2">
+        {chats.map((chat) => (
+          <button
+            key={chat.id}
+            className="rounded-full p-4 shadow-lg"
+            onClick={() => setActiveChat(chat.id)}
+          >
+            <MessageCircle className="h-6 w-6" />
+            <span className="sr-only">Open chat {chat.id}</span>
+          </button>
+        ))}
+        <button className="rounded-full p-4 shadow-lg" onClick={createNewChat}>
+          <Plus className="h-6 w-6" />
+          <span className="sr-only">Create new chat</span>
+        </button>
+      </div>
+
+      {activeChat !== null && (
+        <ResizableBox
+          width={400}
+          height={600}
+          minConstraints={[300, 400]}
+          maxConstraints={[600, 800]}
+          className="fixed shadow-lg bg-background"
+          style={{
+            top: `${position.y}px`,
+            left: `${position.x}px`,
+            position: 'absolute',
+          }}
+        >
+          <div className="flex flex-col h-full">
+            <div
+              className="flex items-center justify-between border-b px-4 py-2 cursor-move"
+              onMouseDown={handleMouseDown}
+            >
+              <h2 className="text-lg font-semibold">Chat Assistant {activeChat}</h2>
+              <button className="p-2" onClick={() => setActiveChat(null)}>
+                <X className="h-5 w-5" />
+                <span className="sr-only">Close</span>
+              </button>
+            </div>
+            <div className="flex-1 p-4 overflow-y-auto">
+              {chats[activeChat - 1].messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`mb-4 max-w-[80%] rounded-lg p-2 ${
+                    message.sender === 'user'
+                      ? 'ml-auto bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  }`}
+                >
+                  {message.text}
+                </div>
+              ))}
+            </div>
+            <div className="border-t p-4">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                className="flex items-center gap-2"
+              >
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  className="flex-1 p-2 border rounded"
+                />
+                <button type="submit" className="p-2">
+                  <Send className="h-4 w-4" />
+                  <span className="sr-only">Send message</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </ResizableBox>
+      )}
+    </>
+  );
+}
+
+export default MultipleSidebarChatbots;
