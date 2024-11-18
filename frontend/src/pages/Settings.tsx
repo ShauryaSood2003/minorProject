@@ -38,6 +38,18 @@ export default function SettingsPage() {
     }
   }, [settings.darkMode])
 
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    const userId = localStorage.getItem("id");
+
+    if (!userId || !token) {
+      console.error("User ID or access token is missing!");
+      navigate('/login') ; 
+      return;
+    }
+
+  }, [])
+
   const handleSwitchChange = (name: string) => {
     setSettings((prev: any) => ({ ...prev, [name]: !prev[name] }))
   }
@@ -73,13 +85,25 @@ export default function SettingsPage() {
           },
           body:JSON.stringify({userId})
         })
+
+         if (!response.ok) {
+        throw new Error(`HTTP error! in setting page while deactivating status: ${response.status}`)
+          }
+
+          const data = await response.json() ;
+
+        if (data.status > 300) {
+          if (data.message.includes("Unauthorized access")) {
+            setError("Your session has expired. Please log in again.")
+            navigate('/login')  // Changed to navigate from react-router-dom
+          }
+        }
         
         if (response.ok) {
           console.log('Account deactivated successfully')
           // Optionally navigate to a login screen or home page
           navigate("/login")
         } else {
-          const data = await response.json()
           setError(data.message || 'Failed to deactivate account')
         }
       } catch (err) {
@@ -125,6 +149,19 @@ export default function SettingsPage() {
         })
       })
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! in setting page while updating password status: ${response.status}`)
+          }
+
+          const data = await response.json() ;
+
+        if (data.status > 300) {
+          if (data.message.includes("Unauthorized access")) {
+            setError("Your session has expired. Please log in again.")
+            navigate('/login')  // Changed to navigate from react-router-dom
+          }
+        }
+
       if (response.ok) {
         console.log('Password updated successfully')
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
@@ -141,6 +178,8 @@ export default function SettingsPage() {
   const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
     setShowPassword(prev => ({ ...prev, [field]: !prev[field] }))
   }
+
+  
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 py-8">

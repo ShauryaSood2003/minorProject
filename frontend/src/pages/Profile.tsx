@@ -30,6 +30,7 @@ export default function ProfilePage() {
 
       if (!userId || !token) {
         console.error("User ID or access token is missing!");
+        navigate('/login') ; 
         return;
       }
 
@@ -43,7 +44,18 @@ export default function ProfilePage() {
           body: JSON.stringify({ userId }),
         });
 
+         if (!response.ok) {
+        throw new Error(`HTTP error! in profile in useEffect status: ${response.status}`)
+      }
+
         const data = await response.json();
+
+        if (data.status > 300) {
+        if (data.message.includes("Unauthorized access")) {
+          setError("Your session has expired. Please log in again.")
+          navigate('/login')  // Changed to navigate from react-router-dom
+        }
+      }
 
         if (response.ok) {
           setFormData({
@@ -106,7 +118,18 @@ export default function ProfilePage() {
         body: JSON.stringify({ userId, ...updatedProfile }),
       });
 
+       if (!response.ok) {
+        throw new Error(`HTTP error! in profile while submitting status: ${response.status}`)
+      }
+
       const data = await response.json();
+
+      if (data.status > 300) {
+        if (data.message.includes("Unauthorized access")) {
+          setError("Your session has expired. Please log in again.")
+          navigate('/login')  // Changed to navigate from react-router-dom
+        }
+      }
 
       if (response.ok) {
         console.log('Profile updated successfully');

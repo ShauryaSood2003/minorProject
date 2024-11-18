@@ -25,8 +25,8 @@ app.use(express.urlencoded({ extended: true })) ;  // to accept url encoded data
 
 
 
-app.get("/", (req, res) => {
-    res.status(200).json({ message: "Hello from backend" });
+app.get("/ping", (req, res) => {
+    res.status(200).json({ message: "Backend is working perfectly" });
 })
 
 app.post("/test", async (req,res)=>{
