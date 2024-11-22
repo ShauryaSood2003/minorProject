@@ -116,17 +116,14 @@ export default function ChatPage() {
           websiteName: "self@general@123",
           question: inputMessage,
           model: "Gemini 1.5",
-        }, {
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          }
-        }
-      )
+        }),
+      })
 
-      
-      const data = response.data ;
-      console.log("response", response.data)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
       const botReply = data.data.conversation.chats[0].answer
 
       const botResponse: Message = {

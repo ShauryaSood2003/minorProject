@@ -143,6 +143,10 @@ function MultipleSidebarChatbots() {
       if (!userId || !token) {
         throw new Error('User ID or access token is missing!');
       }
+
+      const currentUrl = window.location.href;   // Current URL
+      const title = document.title;              // Page title
+      const baseUrl = window.location.origin; 
   
       const response = await fetch('http://localhost:8000/api/v1/chat/append', {
         method: 'PATCH',
@@ -151,8 +155,9 @@ function MultipleSidebarChatbots() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          websiteName: 'self@general@123',
+          websiteName: baseUrl,
           question: inputMessage,
+          extraInfo:`take reference from this website url ${currentUrl}`,
           model: 'Gemini 1.5',
         }),
       });

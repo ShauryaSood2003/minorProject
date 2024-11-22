@@ -188,11 +188,11 @@ export default function DashboardPage() {
 
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <Card 
-        className={`flex flex-col sm:flex-row justify-between items-center bg-gradient-to-r from-purple-500 to-indigo-600 text-white transition-all duration-300 ease-in-out ${isHovered ? 'shadow-lg scale-105' : 'shadow'}`}
+        className={`flex justify-between items-center bg-gradient-to-r from-purple-500 to-indigo-600 text-white transition-all duration-300 ease-in-out ${isHovered ? 'shadow-lg scale-105' : 'shadow'}`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <CardHeader className="flex-1">
+        <CardHeader className="flex">
           <CardTitle className="text-2xl sm:text-3xl font-bold mb-2">500 Free Tokens!</CardTitle>
           <CardDescription className="text-purple-100 text-base sm:text-lg">
             You Got 500 complimentary tokens for signIn.
