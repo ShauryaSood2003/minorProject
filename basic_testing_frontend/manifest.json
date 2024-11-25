@@ -10,7 +10,7 @@
     "activeTab"
   ],
   "action": {
-    "default_popup": "index.html"
+    "default_popup": ""
   },
   "host_permissions": [
     "http://localhost:8000/*"

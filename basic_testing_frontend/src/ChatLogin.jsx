@@ -1,71 +1,18 @@
-import React, { useState, useEffect } from "react";
-
-function App() {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true); // Track loading state
-
-  // Check chrome.storage.local for user details on component mount
-  useEffect(() => {
-    chrome.storage.local.get(["user"], (result) => {
-      if (result.user) {
-        setUser(result.user);
-      }
-      setLoading(false); // Stop loading after checking
-    });
-  }, []);
-
-  // Handle login
-  const handleLogin = (email) => {
-    const userDetails = { email };
-    setUser(userDetails);
-    chrome.storage.local.set({ user: userDetails }, () => {
-      console.log("User saved to chrome.storage.local");
-    });
-  };
-
-  // Handle logout
-  const handleLogout = () => {
-    setUser(null);
-    chrome.storage.local.remove("user", () => {
-      console.log("User removed from chrome.storage.local");
-    });
-  };
-
-  if (loading) {
-    return <div className="text-center text-gray-500">Loading...</div>;
-  }
-
-  if (!user) {
-    return <Login />;
-  }
-
-  return (
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96 h-auto mx-auto mt-10">
-      <header className="mb-4">
-        <h1 className="text-xl font-semibold text-gray-800 text-center">Welcome Back!</h1>
-        <div className="flex justify-between items-center mt-4">
-          <span className="text-gray-700">Hello, {user.email}!</span>
-          <button
-            className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
-        </div>
-      </header>
-      <div className="text-center text-sm text-gray-500">
-        <small>Chrome Extension Demo</small>
-      </div>
-    </div>
-  );
-}
+import React, { useState, useRef } from "react";
+import { ResizableBox } from 'react-resizable';
+import 'react-resizable/css/styles.css';
+import { X } from 'lucide-react';
 
 // Login component
-function Login() {
+function ChatLogin({setActiveChat, setIsUserLoggedIn}) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [position, setPosition] = useState({ x: 900, y: 50 });
+  const dragging = useRef(false);
+  const dragOffset = useRef({ x: 0, y: 0 });
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -77,7 +24,11 @@ function Login() {
       })
         .then((response) => response.json())
         .then((data) => {
+          setSuccessMessage(data.message) ;
           if (data.data && data.data.accessToken && data.data.refreshToken) {
+
+            console.log(data.data) ;
+
 
             chrome.storage.local.set(
               {
@@ -88,6 +39,7 @@ function Login() {
               () => {
                 console.log("Tokens saved to chrome.storage.local");
                 setSuccessMessage("Logged in successfully!"); // Set success message
+                setIsUserLoggedIn(2);
                 setTimeout(() => setSuccessMessage(""), 3000);
               }
             );
@@ -106,13 +58,74 @@ function Login() {
       setError("Please enter a valid email and password.");
     }
   };
+
+  const handleMouseDown = (e) => {
+    dragging.current = true;
+    dragOffset.current = {
+      x: e.clientX - position.x,
+      y: e.clientY - position.y,
+    };
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+
+  const handleMouseMove = (e) => {
+    if (dragging.current) {
+      setPosition({
+        x: e.clientX - dragOffset.current.x,
+        y: e.clientY - dragOffset.current.y,
+      });
+    }
+  };
+
+  const handleMouseUp = () => {
+    dragging.current = false;
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+
+  
   
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-lg w-96 h-auto mx-auto mt-10">
-      <h2 className="text-2xl font-semibold text-center mb-6">Login</h2>
+
+    <ResizableBox
+  width={400}
+  height={450}
+  minConstraints={[400, 450]}
+  maxConstraints={[600, 550]}
+  className="fixed shadow-lg bg-white "
+  style={{
+    top: `${position.y}px`,
+    left: `${position.x}px`,
+    position: "fixed",
+    zIndex: "1000",
+    scrollbarColor: "white",
+  }}
+>
+  <div className="flex flex-col h-full">
+    <div
+      className="flex items-center justify-between border-b px-4 py-2 cursor-move bg-white  "
+      onMouseDown={handleMouseDown}
+      // style={{ color: "black" }}
+    >
+      <h2 className="text-lg font-semibold text-black flex items-center gap-3">
+        
+        Login Page
+      </h2>
+
+      <button className="p-2 text-black" onClick={() => setIsUserLoggedIn(0)}>
+        <X className="h-5 w-5" />
+        <span className="sr-only">Close</span>
+      </button>
+    </div>
+    
+    {/* add code here */}
+    
+    <div className="bg-white p-6 rounded-lg shadow-lg w-96 h-auto mx-auto mt-0">
+      <h2 className="text-2xl font-semibold text-center mb-6 text-black">Login</h2>
        {successMessage && (
-        <div className="mb-4 text-center text-green-500">{successMessage}</div> // Display success message
+        <div className=" text-center text-green-500">{successMessage}</div> // Display success message
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
@@ -120,7 +133,7 @@ function Login() {
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 border bg-white text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label="Email"
         />
         <input
@@ -128,7 +141,7 @@ function Login() {
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 border bg-white text-black border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label="Password"
         />
         {error && <p className="text-red-500 text-sm">{error}</p>}
@@ -153,7 +166,14 @@ function Login() {
         </span>
       </div>
     </div>
+
+  </div>
+</ResizableBox>
+
+
+
+
   );
 }
 
-export default App;
+export default ChatLogin;

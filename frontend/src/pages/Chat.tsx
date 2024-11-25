@@ -43,15 +43,20 @@ export default function ChatPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
 
+  const [speechSynthesisInstance, setSpeechSynthesisInstance] = useState<any>(null);
+  const [currentMessageId, setCurrentMessageId] = useState<any>(null);
+
   useEffect(() => {
     const token = localStorage.getItem("accessToken")
     const userId = localStorage.getItem("id")
 
+    
     if (!userId || !token) {
       console.log("User ID or access token is missing. Please log in again.")
       navigate('/login')
       return ; 
     }
+    console.log("token are there in the chat page")
 
     fetchBillingInfo(token, userId)
     initializeSpeechRecognition()
@@ -90,6 +95,46 @@ export default function ChatPage() {
     }
   }
 
+  const handlePlayMessage = (id: number, text: string) => {
+
+    console.log("id", id) ;
+    console.log("text", text) ; 
+    console.log("currentMessageId", currentMessageId) ;
+    console.log("speechSynthesisInstance", speechSynthesisInstance) ;
+
+    // If the current message is playing, toggle pause/resume
+    if (speechSynthesisInstance && currentMessageId === id) {
+      console.log(0) ;
+      if (window.speechSynthesis.speaking) {
+        console.log(1) ;
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+          console.log(2) ;
+        } else {
+          console.log(3) ;
+          window.speechSynthesis.pause();
+        }
+      }
+    } else {
+      // Stop any ongoing speech
+      window.speechSynthesis.cancel();
+
+      // Create a new utterance for the selected message
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => {
+        setSpeechSynthesisInstance(null);
+        setCurrentMessageId(null);
+      };
+
+      // Start speaking
+      window.speechSynthesis.speak(utterance);
+
+      // Update the state
+      setSpeechSynthesisInstance(utterance);
+      setCurrentMessageId(id);
+    }
+  };
+
   const sendMessage = async () => {
     if (inputMessage.trim() === '') return
 
@@ -116,14 +161,16 @@ export default function ChatPage() {
           websiteName: "self@general@123",
           question: inputMessage,
           model: "Gemini 1.5",
-        }),
-      })
+          extraInfo: `This is the set of chat that has happened till now, so that you can give more context aware answer, Chats are are follows: \n ${messages} `
+        },
+        {
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          }
+        }
+      )
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
+      const data = response.data ;
       const botReply = data.data.conversation.chats[0].answer
 
       const botResponse: Message = {
@@ -136,12 +183,13 @@ export default function ChatPage() {
       fetchBillingInfo(token, userId)
     } catch (err: any) {
       console.log("error while sending message", err) ;
-      if (err.response.data.message.includes("Unauthorized access")) {
+      if (err.response?.data?.message?.includes("Unauthorized access")) {
         setError("Your session has expired. Please log in again.")
         navigate('/login')  // Changed to navigate from react-router-dom
       } else {
         setError(`An error occurred: ${err.message}`)
       }
+      
     }
   }
 
@@ -240,7 +288,9 @@ export default function ChatPage() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <Button variant="ghost" onClick={() => speakMessage(message.content)} className="ml-2">
+                          <Button variant="ghost" 
+                          onClick={() => handlePlayMessage(message.id, message.content)}
+                          className={`ml-2  ${(currentMessageId === message.id) ? 'text-red-500' : 'text-gray-600'}  `}>
                             <Volume2 className="h-4 w-4" />
                           </Button>
                         </TooltipTrigger>
