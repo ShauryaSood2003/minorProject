@@ -87,7 +87,7 @@ export const userLogin = async (req, res) => {
         // generate the tokens
         const { accessToken, refreshToken } = generateAuthTokens(existingUser._id);
     
-        storeRefreshToken(existingUser._id, refreshToken).catch((err) => console.log("Error storing refresh token in redis", err))
+        await storeRefreshToken(existingUser._id, refreshToken).catch((err) => console.log("Error storing refresh token in redis", err))
     
         res
             .status(200)
