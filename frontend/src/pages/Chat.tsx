@@ -8,6 +8,7 @@ declare global {
 
 
 import { useState, useRef, useEffect } from 'react'
+import {franc} from 'franc';
 import { useNavigate } from 'react-router-dom'  // Changed from next/navigation
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -19,6 +20,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import ReactMarkdown from 'react-markdown'
 import { Send, Volume2, Mic, AlertCircle } from 'lucide-react'
 import axios from 'axios'
+import { Skeleton } from "@/components/ui/skeleton"
 
 // Define the Message type
 type Message = {
@@ -42,6 +44,7 @@ export default function ChatPage() {
   const navigate = useNavigate()  // Changed to useNavigate from react-router-dom
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
+  const [isLoading, setIsLoading] = useState(false);
 
   const [speechSynthesisInstance, setSpeechSynthesisInstance] = useState<any>(null);
   const [currentMessageId, setCurrentMessageId] = useState<any>(null);
@@ -96,39 +99,54 @@ export default function ChatPage() {
   }
 
   const handlePlayMessage = (id: number, text: string) => {
-
-    console.log("id", id) ;
-    console.log("text", text) ; 
-    console.log("currentMessageId", currentMessageId) ;
-    console.log("speechSynthesisInstance", speechSynthesisInstance) ;
-
+    console.log("id", id);
+    console.log("text", text);
+    console.log("currentMessageId", currentMessageId);
+    console.log("speechSynthesisInstance", speechSynthesisInstance);
+  
+    // Function to detect language
+    const detectLanguage = (text: string): string => {
+      const langCode = franc(text);
+      switch (langCode) {
+        case 'eng': return 'en-US'; // English
+        case 'hin': return 'hi-IN'; // Hindi
+        case 'deu': return 'de-DE'; // German
+        case 'fra': return 'fr-FR'; // French
+        default: return 'en-US'; // Default to English
+      }
+    };
+  
     // If the current message is playing, toggle pause/resume
     if (speechSynthesisInstance && currentMessageId === id) {
-      console.log(0) ;
+      console.log(0);
       if (window.speechSynthesis.speaking) {
-        console.log(1) ;
+        console.log(1);
         if (window.speechSynthesis.paused) {
           window.speechSynthesis.resume();
-          console.log(2) ;
+          console.log(2);
         } else {
-          console.log(3) ;
+          console.log(3);
           window.speechSynthesis.pause();
         }
       }
     } else {
       // Stop any ongoing speech
       window.speechSynthesis.cancel();
-
+  
+      // Detect the language and set the voice language
+      const detectedLang = detectLanguage(text);
+  
       // Create a new utterance for the selected message
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = detectedLang;
       utterance.onend = () => {
         setSpeechSynthesisInstance(null);
         setCurrentMessageId(null);
       };
-
+  
       // Start speaking
       window.speechSynthesis.speak(utterance);
-
+  
       // Update the state
       setSpeechSynthesisInstance(utterance);
       setCurrentMessageId(id);
@@ -147,6 +165,7 @@ export default function ChatPage() {
 
     setMessages(prevMessages => [...prevMessages, newMessage])
     setInputMessage('')
+    setIsLoading(true);
 
     try {
       const token = localStorage.getItem("accessToken")
@@ -161,7 +180,7 @@ export default function ChatPage() {
           websiteName: "self@general@123",
           question: inputMessage,
           model: "Gemini 1.5",
-          extraInfo: `This is the set of chat that has happened till now, so that you can give more context aware answer, Chats are are follows: \n ${messages} `
+          extraInfo: `This is the set of chat that has happened till now, so that you can give more context aware answer, Chats are are follows: \n ${JSON.stringify(messages)}, if this is empty consider that the chat has just started, also give responses not more than 200-500 words if not directed by the user for a even longer answer. Please take the language context also and give the response in the language in which the responde was given!`
         },
         {
           headers: {
@@ -190,6 +209,8 @@ export default function ChatPage() {
         setError(`An error occurred: ${err.message}`)
       }
       
+    }finally {
+      setIsLoading(false); // Set loading to false
     }
   }
 
@@ -303,6 +324,22 @@ export default function ChatPage() {
                 </CardContent>
               </Card>
             ))}
+            {/* Skeleton Loader for the bot's response */}
+            {isLoading && (
+              <Card className="mb-4 mr-auto max-w-[80%]">
+                <CardContent className="p-4">
+                  <div className="flex items-start">
+                    <Avatar className="h-8 w-8 mr-2">
+                      <Skeleton className="h-8 w-8 rounded-full" />
+                    </Avatar>
+                    <div className="flex-grow space-y-2">
+                      <Skeleton className="h-4 w-[250px]" />
+                      <Skeleton className="h-4 w-[200px]" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </ScrollArea>
 
           <div className="p-4 bg-white dark:bg-gray-800 border-t dark:border-gray-700">
